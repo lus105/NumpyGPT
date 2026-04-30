@@ -1,0 +1,41 @@
+[project]
+name = "numpygpt"
+version = "0.1.0"
+description = "GPT-2 model in plain numpy"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.4.4",
+    "regex>=2026.4.4",
+    "requests>=2.33.1",
+    "safetensors>=0.7.0",
+    "tqdm>=4.67.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pytest",
+    "pytest-mock",
+]
+
+# ------------ Ruff --------------------------
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# ------------ Pytest ------------------------
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
+testpaths = "tests/"
+pythonpath = [".", "src"]
