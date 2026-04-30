@@ -6,7 +6,7 @@ import requests
 from safetensors import safe_open
 from tqdm import tqdm
 
-from encoder import get_encoder
+from .encoder import get_encoder
 
 MODEL_NAMES = {
     '124M': 'gpt2',

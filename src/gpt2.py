@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 
-from utils import load_encoder_hparams_and_params
+from .utils import load_encoder_hparams_and_params
 
 
 def gelu(x):
