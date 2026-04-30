@@ -5,9 +5,11 @@ description = "GPT-2 model in plain numpy"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "ipykernel>=7.2.0",
     "numpy>=2.4.4",
     "regex>=2026.4.4",
     "requests>=2.33.1",
+    "rootutils>=1.0.7",
     "safetensors>=0.7.0",
     "tqdm>=4.67.3",
 ]
