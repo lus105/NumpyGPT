@@ -9,6 +9,8 @@ from .utils import load_encoder_hparams_and_params
 
 Array = NDArray[Any]
 
+_attn_collector: list[Array] | None = None  # set by collect_attention() context manager
+
 
 def gelu(x: float | Array) -> Array:
     return 0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x**3)))
@@ -75,6 +77,16 @@ def mha(
 
     # out projection
     x = linear(x, **c_proj)  # [n_seq, n_embd] -> [n_seq, n_embd]
+
+    if _attn_collector is not None:
+        _attn_collector.append(
+            np.stack(
+                [
+                    softmax(q @ k.T / np.sqrt(q.shape[-1]) + causal_mask)
+                    for q, k in zip(qkv_heads[0], qkv_heads[1])
+                ]
+            )
+        )  # [n_head, n_seq, n_seq]
 
     return x
 
