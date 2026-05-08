@@ -1,12 +1,16 @@
 import json
 import os
 import re
+from typing import Any
 
 import requests
+from numpy.typing import NDArray
 from safetensors import safe_open
 from tqdm import tqdm
 
-from .encoder import get_encoder
+from .encoder import Encoder, get_encoder
+
+Array = NDArray[Any]
 
 MODEL_NAMES = {
     '124M': 'gpt2',
@@ -33,7 +37,7 @@ _BLOCK_KEY_MAP = {
 }
 
 
-def _download_file(url, dest_path):
+def _download_file(url: str, dest_path: str) -> None:
     r = requests.get(url, stream=True)
     r.raise_for_status()
     file_size = int(r.headers.get('content-length', 0))
@@ -58,7 +62,7 @@ _HF_FILENAMES = {
 }
 
 
-def download_gpt2_files(model_size, model_dir):
+def download_gpt2_files(model_size: str, model_dir: str) -> None:
     hf_model = MODEL_NAMES[model_size]
     for hf_name, local_name in _HF_FILENAMES.items():
         dest = os.path.join(model_dir, local_name)
@@ -66,8 +70,8 @@ def download_gpt2_files(model_size, model_dir):
             _download_file(f'https://huggingface.co/{hf_model}/resolve/main/{hf_name}', dest)
 
 
-def load_gpt2_params_from_safetensors(model_dir, hparams):
-    params = {'blocks': [{} for _ in range(hparams['n_layer'])]}
+def load_gpt2_params_from_safetensors(model_dir: str, hparams: dict[str, int]) -> dict[str, Any]:
+    params: dict[str, Any] = {'blocks': [{} for _ in range(hparams['n_layer'])]}
 
     with safe_open(os.path.join(model_dir, 'model.safetensors'), framework='numpy') as f:
         for key in f.keys():
@@ -101,7 +105,9 @@ def load_gpt2_params_from_safetensors(model_dir, hparams):
     return params
 
 
-def load_encoder_hparams_and_params(model_size, models_dir):
+def load_encoder_hparams_and_params(
+    model_size: str, models_dir: str
+) -> tuple[Encoder, dict[str, int], dict[str, Any]]:
     assert model_size in MODEL_NAMES
 
     model_dir = os.path.join(models_dir, model_size)

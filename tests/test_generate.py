@@ -13,7 +13,7 @@ N_LAYER = 2
 def _make_params():
     rng = np.random.default_rng(42)
 
-    def r(*shape):
+    def r(*shape: int) -> np.ndarray:
         return rng.standard_normal(shape).astype(np.float32)
 
     def block():

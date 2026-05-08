@@ -1,32 +1,38 @@
 import argparse
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 from tqdm import tqdm
 
 from .utils import load_encoder_hparams_and_params
 
+Array = NDArray[Any]
 
-def gelu(x):
+
+def gelu(x: float | Array) -> Array:
     return 0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x**3)))
 
 
-def softmax(x):
+def softmax(x: float | Array) -> Array:
     exp_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
     return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
 
 
-def layer_norm(x, g, b, eps: float = 1e-5):
+def layer_norm(x: Array, g: Array, b: Array, eps: float = 1e-5) -> Array:
     mean = np.mean(x, axis=-1, keepdims=True)
     variance = np.var(x, axis=-1, keepdims=True)
     x = (x - mean) / np.sqrt(variance + eps)  # normalize x to have mean=0 and var=1 over last axis
     return g * x + b  # scale and offset with gamma/beta params
 
 
-def linear(x, w, b):  # [m, in], [in, out], [out] -> [m, out]
+def linear(x: Array, w: Array, b: Array) -> Array:  # [m, in], [in, out], [out] -> [m, out]
     return x @ w + b
 
 
-def ffn(x, c_fc, c_proj):  # [n_seq, n_embd] -> [n_seq, n_embd]
+def ffn(
+    x: Array, c_fc: dict[str, Array], c_proj: dict[str, Array]
+) -> Array:  # [n_seq, n_embd] -> [n_seq, n_embd]
     # project up
     a = gelu(linear(x, **c_fc))  # [n_seq, n_embd] -> [n_seq, 4*n_embd]
 
@@ -36,11 +42,15 @@ def ffn(x, c_fc, c_proj):  # [n_seq, n_embd] -> [n_seq, n_embd]
     return x
 
 
-def attention(q, k, v, mask):  # [n_q, d_k], [n_k, d_k], [n_k, d_v], [n_q, n_k] -> [n_q, d_v]
+def attention(
+    q: Array, k: Array, v: Array, mask: Array
+) -> Array:  # [n_q, d_k], [n_k, d_k], [n_k, d_v], [n_q, n_k] -> [n_q, d_v]
     return softmax(q @ k.T / np.sqrt(q.shape[-1]) + mask) @ v
 
 
-def mha(x, c_attn, c_proj, n_head):  # [n_seq, n_embd] -> [n_seq, n_embd]
+def mha(
+    x: Array, c_attn: dict[str, Array], c_proj: dict[str, Array], n_head: int
+) -> Array:  # [n_seq, n_embd] -> [n_seq, n_embd]
     # qkv projection
     x = linear(x, **c_attn)  # [n_seq, n_embd] -> [n_seq, 3*n_embd]
 
@@ -69,7 +79,14 @@ def mha(x, c_attn, c_proj, n_head):  # [n_seq, n_embd] -> [n_seq, n_embd]
     return x
 
 
-def transformer_block(x, mlp, attn, ln_1, ln_2, n_head):  # [n_seq, n_embd] -> [n_seq, n_embd]
+def transformer_block(
+    x: Array,
+    mlp: dict[str, Any],
+    attn: dict[str, Any],
+    ln_1: dict[str, Any],
+    ln_2: dict[str, Any],
+    n_head: int,
+) -> Array:  # [n_seq, n_embd] -> [n_seq, n_embd]
     # multi-head causal self attention
     x = x + mha(layer_norm(x, **ln_1), **attn, n_head=n_head)  # [n_seq, n_embd] -> [n_seq, n_embd]
 
@@ -79,7 +96,14 @@ def transformer_block(x, mlp, attn, ln_1, ln_2, n_head):  # [n_seq, n_embd] -> [
     return x
 
 
-def gpt2(inputs, wte, wpe, blocks, ln_f, n_head):  # [n_seq] -> [n_seq, n_vocab]
+def gpt2(
+    inputs: list[int],
+    wte: Array,
+    wpe: Array,
+    blocks: list[dict[str, Any]],
+    ln_f: dict[str, Any],
+    n_head: int,
+) -> Array:  # [n_seq] -> [n_seq, n_vocab]
     # token + positional embeddings
     x = wte[inputs] + wpe[range(len(inputs))]  # [n_seq] -> [n_seq, n_embd]
 
@@ -92,7 +116,9 @@ def gpt2(inputs, wte, wpe, blocks, ln_f, n_head):  # [n_seq] -> [n_seq, n_vocab]
     return x @ wte.T  # [n_seq, n_embd] -> [n_seq, n_vocab]
 
 
-def generate(inputs, params, n_head, n_tokens_to_generate):
+def generate(
+    inputs: list[int], params: dict[str, Any], n_head: int, n_tokens_to_generate: int
+) -> list[int]:
     for _ in tqdm(range(n_tokens_to_generate), 'generating'):  # auto-regressive decode loop
         logits = gpt2(inputs, **params, n_head=n_head)  # model forward pass
         next_id = np.argmax(logits[-1])  # greedy sampling
