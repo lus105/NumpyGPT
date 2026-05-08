@@ -19,6 +19,7 @@ dev = [
     "ruff",
     "pytest",
     "pytest-mock",
+    "pyrefly",
 ]
 
 # ------------ Ruff --------------------------
@@ -41,3 +42,10 @@ markers = [
 ]
 testpaths = "tests/"
 pythonpath = [".", "src"]
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+]
+search-path = ["."]
+preset = "strict"
