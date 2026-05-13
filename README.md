@@ -33,43 +33,43 @@ The forward pass is implemented as standalone NumPy functions in `src/gpt2.py`. 
 
 ### 1. Token Embeddings
 
-![Token Embeddings](assets/1_token_embeddings.webp)
+![Token Embeddings](assets/1_token_embeddings.png)
 
 Token IDs index into the `wte` weight table `[50257 × 768]`, converting discrete integers into dense 768-dim vectors.
 
 ### 2. Positional Encodings
 
-![Positional Encodings](assets/2_positional_encodings.webp)
+![Positional Encodings](assets/2_positional_encodings.png)
 
 Position indices `[0..n_seq]` index into `wpe [1024 × 768]`. The result is added elementwise to token embeddings — without this, the model cannot distinguish word order.
 
 ### 3. Primitives: Layer Norm & Linear
 
-![Layer Norm](assets/3.1_layer_norm.webp) ![Linear](assets/3.2_linear.webp)
+![Layer Norm](assets/3.1_layer_norm.png) ![Linear](assets/3.2_linear.png)
 
 Two building blocks used throughout the network. Layer norm standardizes each token's activations to mean=0, std=1 then rescales with learned γ, β. Linear is a plain matrix multiply with bias.
 
 ### 4. Single-Head Attention
 
-![Attention](assets/4_attention.webp)
+![Attention](assets/4_attention.png)
 
 Projects input into Q, K, V; computes scaled dot-product scores `Q@K.T/√d_k`; applies a causal mask (future tokens → −∞); softmax to get weights; weighted sum of V.
 
 ### 5. Multi-Head Attention
 
-![Multi-Head Attention](assets/5_mha.webp)
+![Multi-Head Attention](assets/5_mha.png)
 
 A single `c_attn` projection produces Q, K, V `[n_seq × 768]` each. These are split into 12 heads of 64 dims, attention runs in parallel per head, outputs are concatenated back to `[n_seq × 768]`.
 
 ### 6. Feed-Forward Network
 
-![FFN](assets/6_ffn.webp)
+![FFN](assets/6_ffn.png)
 
 Two-layer MLP applied independently per token: expand `768→3072` with GELU activation, contract `3072→768`. Unlike attention, FFN has no communication between positions.
 
 ### 7. Transformer Block
 
-![Transformer Block](assets/7_transformer_block.webp)
+![Transformer Block](assets/7_transformer_block.png)
 
 Combines MHA and FFN with pre-norm and residual connections:
 ```
@@ -81,7 +81,7 @@ Residual connections let gradients flow directly to earlier layers, enabling tra
 
 ### 8. Full GPT-2
 
-![GPT-2](assets/8_gpt2.webp)
+![GPT-2](assets/8_gpt2.png)
 
 End-to-end: BPE tokenize → token+position embeddings → 12× transformer block → final layer norm → `x@wte.T` → argmax → append token → repeat. Note `wte` is reused as the output projection (weight tying).
 
