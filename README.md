@@ -45,13 +45,13 @@ Transformers process all tokens simultaneously rather than one at a time, so the
 
 ### 3. Primitives: Layer Norm & Linear
 
-![Layer Norm](assets/3.1_layer_norm.png) ![Linear](assets/3.2_linear.png)
+![Layer Norm](assets/3.1_layer_norm.png) ![Linear](assets/3.2_linear.png1)
 
 These two operations are the basic building blocks used repeatedly throughout the network. **Layer norm** standardizes each token's 768-dimensional activation vector to have mean 0 and variance 1 — computed across the embedding dimension for that token independently. It then applies learned scale (γ) and shift (β) parameters, giving the model control over the output range. This keeps activations in a stable range as they flow through many layers. **Linear** is a plain matrix multiply with bias: `x @ W + b`. Given input `[n_seq × d_in]` and weight matrix `[d_in × d_out]`, it projects every token's representation into a new space of dimension `d_out` — the same transformation applied to each token position independently.
 
 ### 4. Single-Head Attention
 
-![Attention](assets/4_attention.png)
+![Attention](assets/4_attention.png1)
 
 Attention is the mechanism by which tokens gather information from other tokens. Given input `[n_seq × 64]` (already split to one head), three separate linear projections produce Queries (Q), Keys (K), and Values (V). The dot product `Q @ K.T` scores how relevant each key position is to each query position, scaled by `√64` to prevent the dot products from growing too large for softmax. A causal mask then sets all upper-triangle entries to −∞, forcing each token to attend only to itself and tokens that came before it — this is what makes the model "autoregressive" and unable to cheat by looking ahead. After softmax, each row of the resulting `[n_seq × n_seq]` weight matrix sums to 1 and represents a distribution over past positions. Multiplying by V produces context-enriched representations: `[n_seq × 64]`.
 
